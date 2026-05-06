@@ -1,7 +1,10 @@
 import axios from "axios";
 import Standings from "../models/standings.js";
 import { ENV } from "../config/env.js";
-import fixture from "../models/fixture.js";
+import Fixture from "../models/fixture.js";
+import { canMakeRequest, trackRequest } from "./quotaService.js";
+import { generateMatchReport } from "./aiService.js";
+
 
 const api = axios.create({
   baseURL: ENV.BASE_URL,
@@ -12,31 +15,30 @@ const api = axios.create({
 });
 
 export const fetchFixtures = async (leagueId, season) => {
-  try {
-    const response = await api.get("/fixtures", {
-      params: {
-        league: leagueId,
-        season: season,
-      },
-    });
-    return { data: res.data };
-  } catch (error) {
-    return { error: error.message };
-    console.error("Error fetching fixtures:", error.message);
+  if (!(await canMakeRequest())) {
+    console.log("🚫 API limit reached");
+    return [];
   }
-};
 
-export const fetchFixtures = async (leagueId, season) => {
   try {
     const response = await api.get("/fixtures", {
       params: { league: leagueId, season },
     });
+
+    await trackRequest(); // ✅ track usage
 
     return response.data.response;
   } catch (error) {
     console.error("API Error:", error.message);
     return [];
   }
+};
+export const getLiveMatches = async (leagueId, season) => {
+  return await Fixture.find({
+    leagueId,
+    season,
+    status: { $in: ["1H", "2H", "HT"] }, // API-Football live states
+  });
 };
 
 export const getFixtures = async (leagueId, season) => {
@@ -82,5 +84,70 @@ export const getFixtures = async (leagueId, season) => {
 
   await Fixture.bulkWrite(bulkOps);
 
+  // ✅ Generate AI reports for big finished matches
+  for (let match of apiData) {
+    const isBigMatch =
+      ["Arsenal", "Chelsea", "Man United", "Liverpool"].includes(
+        match.teams.home.name
+      ) ||
+      ["Arsenal", "Chelsea", "Man United", "Liverpool"].includes(
+        match.teams.away.name
+      );
+
+    if (match.fixture.status.short === "FT" && isBigMatch) {
+      await generateMatchReport({
+        fixtureId: match.fixture.id,
+        homeTeam: match.teams.home.name,
+        awayTeam: match.teams.away.name,
+        goals: match.goals,
+      });
+    }
+  }
+
   return await Fixture.find({ leagueId, season });
+};
+
+export const getStandings = async (leagueId, season) => {
+  const existing = await Standings.findOne({ leagueId, season });
+
+  const now = new Date();
+
+  if (existing) {
+    const diff = (now - existing.lastUpdated) / (1000 * 60);
+
+    // ⛔ Cache for 6 hours
+    if (diff < 360) {
+      return existing.table;
+    }
+  }
+
+  const table = await fetchStandings(leagueId, season);
+
+  await Standings.findOneAndUpdate(
+    { leagueId, season },
+    {
+      leagueId,
+      season,
+      table,
+      lastUpdated: new Date(),
+    },
+    { upsert: true },
+  );
+
+  return table;
+};
+
+export const fetchStandings = async (leagueId, season) => {
+  try {
+    const response = await api.get("/standings", {
+      params: { league: leagueId, season },
+    });
+
+    await trackRequest();
+
+    return response.data.response[0]?.standings || [];
+  } catch (error) {
+    console.error("API Error:", error.message);
+    return [];
+  }
 };
