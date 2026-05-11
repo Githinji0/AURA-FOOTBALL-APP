@@ -4,6 +4,7 @@ const fixtureSchema = new mongoose.Schema({
   fixtureId: Number,
   leagueId: Number,
   season: Number,
+  round: String,
 
   homeTeam: String,
   awayTeam: String,

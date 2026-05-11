@@ -3,7 +3,8 @@ import { getLeagueFixtures, getLeagueStandings } from "../controllers/fixturesCo
 
 const router = express.Router();
 
-router.get("/:leagueId/:season", getLeagueFixtures);
+// Order matters: specific routes MUST come before generic routes
 router.get("/standings/:leagueId/:season", getLeagueStandings);
+router.get("/:leagueId/:season", getLeagueFixtures);
 
 export default router;

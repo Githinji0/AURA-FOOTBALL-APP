@@ -7,11 +7,12 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { AlertTriangle, LoaderCircle, RadioTower, Trophy } from 'lucide-react';
 import { StandingsTable } from '../../components/StandingsTable';
+import { LiveBadge } from '../../components/LiveBadge.jsx';
 import { fetchStandings, fetchFixtures } from '../../lib/api';
 import { onLeagueStandingsUpdate, subscribeStandings } from '../../lib/socket';
 
 const LEAGUE_INFO = {
-  39: { name: 'Premier League', season: 2025, logo: '/epl.png' },
+  39: { name: 'Premier League', season: 2024, logo: '/epl.png' },
   2: { name: 'Champions League', season: 2025, logo: '/ucl.png' },
   1: { name: 'World Cup', season: 2026, logo: '/fwc.png' },
   45: { name: 'FA Cup', season: 2025, logo: '/fa.png' },
@@ -144,36 +145,29 @@ export default function LeaguePage() {
               )}
             </div>
 
-            {/* Upcoming Matches */}
+            {/* Gameweek Fixtures */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="flex items-center gap-2 text-2xl font-bold mb-6">
                 <RadioTower className="h-5 w-5 text-blue-600" />
-                Upcoming Matches
+                Gameweek Fixtures
               </h2>
               {fixturesLoading ? (
                 <div className="text-center py-8 text-gray-500">Loading matches...</div>
               ) : (
                 <div className="space-y-2">
-                  {fixtures
-                    .filter((m) => ['NS', 'TBD'].includes(m.status))
-                    .slice(0, 5)
-                    .map((match) => (
-                      <div key={match.fixtureId} className="border rounded p-3 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="font-medium">
-                              {match.homeTeam} vs {match.awayTeam}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(match.date).toLocaleString()}
-                            </p>
-                          </div>
-                          <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs font-semibold">
-                            UPCOMING
-                          </span>
+                  {fixtures.map((match) => (
+                    <div key={match.fixtureId} className="border rounded p-3 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="font-medium">
+                            {match.homeTeam} vs {match.awayTeam}
+                          </p>
+                          <p className="text-xs text-gray-500">{new Date(match.date).toLocaleString()}</p>
                         </div>
+                        <LiveBadge status={match.status} />
                       </div>
-                    ))}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

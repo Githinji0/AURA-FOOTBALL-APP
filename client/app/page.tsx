@@ -48,7 +48,7 @@ type Standing = {
 };
 
 const LEAGUES: League[] = [
-  { leagueId: 39, season: 2025, name: 'Premier League', logo: '/epl.png' },
+  { leagueId: 39, season: 2024, name: 'Premier League', logo: '/epl.png' },
   { leagueId: 2, season: 2025, name: 'Champions League', logo: '/ucl.png' },
   { leagueId: 1, season: 2026, name: 'World Cup', logo: '/fwc.png' },
   { leagueId: 45, season: 2025, name: 'FA Cup', logo: '/fa.png' },

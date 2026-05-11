@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 20000, // temporarily increased to diagnose timeouts
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,7 +28,7 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    console.error(`❌ API Error: ${error.message}`);
+    console.error(`❌ API Error: ${error.message}`, error.response?.status || 'no-status');
     return Promise.reject(error);
   }
 );

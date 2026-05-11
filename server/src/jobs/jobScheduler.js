@@ -3,7 +3,7 @@ import { getFixtures, getLiveMatches } from "../services/sportsService.js";
 import { canMakeRequest, trackRequest } from "../services/quotaService.js";
 
 const leagues = [
-  { leagueId: 39, season: 2025 }, // EPL
+  { leagueId: 39, season: 2024 }, // EPL
   { leagueId: 2, season: 2025 },  // UCL
   { leagueId: 1, season: 2026 },  // World Cup
   { leagueId: 45, season: 2025 }, // FA Cup
